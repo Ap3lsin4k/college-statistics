@@ -1,30 +1,10 @@
+from fractions import Fraction
 from math import sqrt
 
 import pytest
 
-
-class Distribution:
-    def __init__(self, mean, standard_deviation):
-        self.std_dev = standard_deviation
-        self.mean = mean
-
-    def __sub__(self, other):
-        return Distribution(self.mean-other.mean, sqrt(self.std_dev**2 + other.std_dev**2))
-
-    def z(self):
-        return -self.mean / self.std_dev
-
-    @classmethod
-    def from_table(cls, *args):
-        one_hundred_percents = sum(event.probability for event in args)
-        if one_hundred_percents != 1:
-            raise ValueError("overall probability must be 100%")
-
-        mean = sum(event.event_value*event.probability for event in args)
-        variance = sum((mean - event.event_value)**2*event.probability for event in args)
-        return Distribution(
-            mean=mean,
-            standard_deviation=sqrt(variance))
+from src.distribution import Distribution
+from src.event import Event
 
 
 def test_init():
@@ -44,7 +24,7 @@ def test_quiz():
 
 
 def test_quiz2():
-    small =Event(2.0, .28)
+    small = Event(2.0, .28)
     medium = Event(3, .4)
     large = Event(3.5, .32)
 
@@ -53,10 +33,24 @@ def test_quiz2():
 
     snake = Distribution.from_table(small, medium, large)
     assert 2.88 == pytest.approx(snake.mean)
-    assert 0.59 == pytest.approx(snake.std_dev, .03)
+    assert 0.59 == pytest.approx(snake.std_dev, .01)
+
+    small_special = small
+    small_special.event_value -= 1
+    medium_special = medium
+    medium_special.event_value -= 1
+    large_special = large
+    large_special.event_value -= 1
+
+    snake_special = Distribution.from_table(small_special, medium_special, large_special)
+    assert pytest.approx(snake_special.mean) == 1.88
+    assert pytest.approx(snake_special.std_dev, 0.01) == sqrt((-0.88)**2*0.28 + (2-1.88)**2*0.28 + (5/2-1.88)**2*.32)
 
 
-class Event():
-    def __init__(self, value, probability):
-        self.event_value = value
-        self.probability = probability
+def test_breakfast_cereal_producer():
+    flakes = Distribution(370, 24)
+    raisins = Distribution(170, 7)
+    total = flakes + raisins
+    assert total.mean == 540
+    assert total.std_dev == 25
+    assert total.z(575) == Fraction(7/5)
