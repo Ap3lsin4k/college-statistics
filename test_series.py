@@ -20,7 +20,7 @@ class Series:
         return str(float(self.value))
 
     def __str__(self):
-        return " + ".join(map(str, [self.a(n) for n in range(1, 10)])) + " + ..."
+        return repr(self)+" = "+" + ".join(map(str, [self.a(n) for n in range(1, 10)])) + " + ..."
 
     def __iter__(self):
         self.elem_index = 0
@@ -178,3 +178,25 @@ def test_khan_academy_college_calculus_conv_div():
 def test_c():
     n = 2
     assert math.log(n)/n*n > Fraction(1, n*n)
+
+
+# def test_a():
+#     def a(n):
+#         return (x+1)**n /(n+1)**(Fraction(1, 3))
+#     for i in range(10):
+#         x = 0.35*i-2
+#         s1 = Series(a, infinity_power=2)
+#         s2 = Series(a, infinity_power=3)
+#         print(x, "\t", s1)
+#         assert s1 == s2
+#
+
+def test_func_of_x():
+    def a(n):
+        return (x+2)**n / (2**n * n**2)
+    for i in range(10):
+        x = i*0.45 - 4
+        s1 = Series(a, infinity_power=2)
+        s2 = Series(a, infinity_power=3)
+        print("\t", s1)
+        assert s1 == s2
