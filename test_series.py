@@ -3,32 +3,7 @@ import math
 import pytest
 from fractions import Fraction
 
-
-class Series:
-    infinity = 100
-
-    def __init__(self, a=lambda n: Fraction(), seq=None, infinity_power=3):
-        self.a = a
-        self.value = sum([self.a(n) for n in range(1, 10 ** infinity_power)])
-
-        self.diverges = self.value == float('inf')
-
-    def __eq__(self, other):
-        return pytest.approx(self.value, 0.1) == other
-
-    def __repr__(self):
-        return str(float(self.value))
-
-    def __str__(self):
-        return repr(self)+" = "+" + ".join(map(str, [self.a(n) for n in range(1, 10)])) + " + ..."
-
-    def __iter__(self):
-        self.elem_index = 0
-        return self
-
-    def __next__(self):
-        self.elem_index += 1
-        return self.a(self.elem_index)
+from src.series import Series, PartialSum
 
 
 def test_series():
@@ -93,24 +68,6 @@ def test_logical_guess():
     assert str(next(l)) == "1/7*5"
 
 
-class PartialSum:
-    def __init__(self, finite_sum):
-        def a(n):
-            if n < 1:
-                raise ValueError("Indexing starts from 1")
-            if n == 1:
-                return finite_sum(1)
-            else:
-                return finite_sum(n) - finite_sum(n - 1)
-
-        self.a = a
-
-        self.series = None  # Series(finite_sum)
-    #
-    # def a(self, param):
-    #     pass
-
-
 def test_partial_sum():
     def partial_sum(num_of_elems):
         n = num_of_elems  # in a sum
@@ -145,7 +102,7 @@ class InfiniteSeq:
 
 def test():
     seq = InfiniteSeq(lambda n: Fraction(n * (n + 3), 4 * (n + 1) * (n + 2)))
-    series = Series(seq=seq)
+    series = Series()
 
 
 # noinspection PyTypeChecker
@@ -194,9 +151,56 @@ def test_c():
 def test_func_of_x():
     def a(n):
         return (x+2)**n / (2**n * n**2)
-    for i in range(10):
+    for i in range(8):
         x = i*0.45 - 4
         s1 = Series(a, infinity_power=2)
-        s2 = Series(a, infinity_power=3)
-        print("\t", s1)
+        s2 = Series(a, infinity_power=1)
         assert s1 == s2
+
+
+# def test_harmonic_series(benchmark):
+#     def sequence(n):
+#         print(n)
+#         return Fraction(1, n)
+#     assert Series(sequence, infinity_power=5).diverges
+
+
+# def test_sage():
+#     sage: k = var('k'); sum((-1)^k/(2*k+1), k, 1, infinity)
+#     1/4*pi - 1
+
+
+def test_evaluate():
+    inf = 5
+    import math
+
+    s = Series(a=lambda n: Fraction((-1)**n * 12**n, math.factorial(n) * (2*n+1) * 100**n), infinity_power=1, rang=range(0, 2**11))
+    s.infinity = 7
+    print("ev", s)
+    assert 10**-4 == 1e-4 == 0.0001 == 1 / 10000
+    assert -9/218750. < 1e-4
+
+def test_error_bound():
+    inf = 5
+    import math
+    s = Series(a=lambda n: Fraction((-1)**n, 3**n * (n+1)), infinity_power=1)
+    s.infinity = 7
+    # print(s._value)
+    # assert math.fabs(float(s.doit(1))) < 0.0001
+    # print(float(s.doit(1)))
+    # print(float(s.doit(2)))
+    # print(6, s.doit(8)-s.doit(7))
+    # print(s)
+    #
+    # def df(x, order):
+    #     return (-1) ** (order-1) * math.factorial(order-1) / x**order
+    #
+    # n = 3
+    # series = (df(1, n+1),)
+    # M = max(series)
+    # print(series, M, "-<")
+
+
+def test_print():
+    print([math.cos(math.pi*n) for n in range(1, 6)])
+
