@@ -100,4 +100,53 @@ def test_prob():
     assert s.failure == s.probability_of_at_least_one_failure_in(1)
 
     assert s.failure + s.success*s.failure == pytest.approx(s.probability_of_at_least_one_failure_in(2))
-    assert 1 - s.failure + s.success * s.failure + s.success ** 2 * s.failure == pytest.approx(s.probability_no_failure_for(3))
+    # assert 1 - s.failure + s.success * s.failure + s.success ** 2 * s.failure == pytest.approx(s.probability_no_failure_for(3))
+
+
+
+
+
+def test_exit_poll():
+    def MuavraLaplasa():
+        pass
+    n = 20
+    za = 14
+    epsilon = 0.05
+    def P(param, x, param1):
+        p = 0.7
+        n = za / p
+        assert n*p == 14
+        return MuavraLaplasa(n, ) - MuavraLaplasa()
+
+    # P(0.65, x, 0.75)
+
+def test_normal():
+    n = 10
+    a = [m**2/(n*m/n)  for m in (3, 3, 4)]
+    print(sum(a) - n)
+    n=11
+    a = [6*6./(n*p)  for p in (3, 3, 5)]
+    print(sum(a) - n)
+
+
+def test_empirical_rule():
+    lifespan = Distribution(16, 1.7)
+    assert 16 == 14.3 + 1.7
+    assert 16 == 19.4 - 1.7 - 1.7
+    assert lifespan.probability(0, 14.3) == pytest.approx(0.50 - 0.68/2)
+    assert lifespan.probability(0, 16) == pytest.approx(.5)
+    assert lifespan.probability(0, 19.4) == pytest.approx(.5 + 0.95/2)
+    assert lifespan.probability(14.3, 19.4) == 0.815
+
+
+def test_empirical_rule2():
+    lifespan = Distribution(87, 8)
+    assert 87 + 24 == 111
+    import scipy.stats as st
+    # assert st.ppf
+    assert 16 == 19.4 - 1.7 - 1.7
+    assert lifespan.probability(0, 14.3) == pytest.approx(0.50 - 0.68/2)
+    assert lifespan.probability(0, 16) == pytest.approx(.5)
+    assert lifespan.probability(0, 19.4) == pytest.approx(.5 + 0.95/2)
+    assert lifespan.probability(14.3, 19.4) == 0.815
+
