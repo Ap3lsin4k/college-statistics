@@ -143,10 +143,20 @@ def test_empirical_rule2():
     lifespan = Distribution(87, 8)
     assert 87 + 24 == 111
     import scipy.stats as st
-    # assert st.ppf
-    assert 16 == 19.4 - 1.7 - 1.7
-    assert lifespan.probability(0, 14.3) == pytest.approx(0.50 - 0.68/2)
-    assert lifespan.probability(0, 16) == pytest.approx(.5)
-    assert lifespan.probability(0, 19.4) == pytest.approx(.5 + 0.95/2)
-    assert lifespan.probability(14.3, 19.4) == 0.815
+    assert st.norm.cdf(0) == 0
+def test_expect_0():
+    from statistics import NormalDist
+    assert NormalDist().cdf(0) == 0  #*2 - 1
+# 1.9599639845400536
+# NormalDist().cdf
+    # assert 0 == st.norm.ppf(0.01)
+
+
+    # assert 0, st.norm.cdf(87/8)
+    # assert 0, st.norm.cdf(87/8)
+    # assert 16 == 19.4 - 1.7 - 1.7
+    # assert lifespan.probability(0, 14.3) == pytest.approx(0.50 - 0.68/2)
+    # assert lifespan.probability(0, 16) == pytest.approx(.5)
+    # assert lifespan.probability(0, 19.4) == pytest.approx(.5 + 0.95/2)
+    # assert lifespan.probability(14.3, 19.4) == 0.815
 
