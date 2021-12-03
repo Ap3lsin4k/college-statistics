@@ -20,6 +20,9 @@ class Distribution:
     def z(self, other_mean=0):
         return (other_mean - self.mean) / self.std_dev
 
+    def __str__(self):
+        return f"m={self.mean}, std_dev:{self.std_dev}"
+
     @classmethod
     def from_table(cls, *args):
         one_hundred_percents = sum(event.probability for event in args)
@@ -40,6 +43,7 @@ class Distribution:
 
     @classmethod
     def from_small_sample(cls, *args) -> 'Distribution':
+        # actually there is a constant for calculating std deviation
         for argument in args:
             assert isinstance(argument, int)
 
@@ -49,6 +53,7 @@ class Distribution:
 
     def probability(self, a, b):
         if a == 0:
+
             num_of_std_dev = round((b - self.mean) / self.std_dev)
             empirical_rule = {0: 0, 1: 0.68, 2: 0.95}
 
@@ -60,5 +65,5 @@ class Distribution:
         return self.probability(0, b) - self.probability(0, a)
 
 
-    def num_of_std_dev(self, a, b   ):
-        return
+    def num_of_std_dev(self, a, b):
+        return None
