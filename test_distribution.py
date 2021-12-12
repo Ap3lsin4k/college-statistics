@@ -1,5 +1,3 @@
-import statistics
-from collections.abc import Iterable
 from fractions import Fraction
 from math import sqrt
 
@@ -7,7 +5,8 @@ import pytest
 
 from src.distribution import Distribution
 from src.event import Event
-from statistics import NormalDist
+
+from src.sample import Sample, F, ChiSquaredTest, ChiSquaredTestOfHomogeneity
 
 
 def test_init():
@@ -97,15 +96,6 @@ def test_range():
         Success(-.01)
 
 
-def test_prob():
-    s = Success(0.95)
-    assert 1 - s.failure == s.probability_no_failure_for(1)
-    assert s.failure == s.probability_of_at_least_one_failure_in(1)
-
-    assert s.failure + s.success * s.failure == pytest.approx(s.probability_of_at_least_one_failure_in(2))
-    # assert 1 - s.failure + s.success * s.failure + s.success ** 2 * s.failure == pytest.approx(s.probability_no_failure_for(3))
-
-
 def test_exit_poll():
     def MuavraLaplasa():
         pass
@@ -145,7 +135,6 @@ def test_empirical_rule():
 def test_empirical_rule2():
     lifespan = Distribution(87, 8)
     assert 87 + 24 == 111
-    import scipy.stats as st
     # assert st.norm.cdf(0) == 0
     from statistics import NormalDist
     assert NormalDist().cdf(0) * 2 - 1 == 0  # *2 - 1
@@ -164,108 +153,13 @@ def test_empirical_rule2():
     # assert lifespan.probability(14.3, 19.4) == 0.815
 
 
-class Sample(Iterable):
-    def __iter__(self):
-        for element in self.sample:
-            yield element
+def test_prob():
+    s = Success(0.95)
+    assert 1 - s.failure == s.probability_no_failure_for(1)
+    assert s.failure == s.probability_of_at_least_one_failure_in(1)
 
-    def __init__(self, *sample):
-        self.sample = tuple(sorted(sample))
-        if len(self.sample) <= 2:
-            raise ValueError("too few params")
-
-    def __repr__(self):
-        if len(self.sample) <= 6:
-            return str(self.sample)
-        return f"|{self.sample}| == {len(self.sample)}"
-
-    def __str__(self):
-        return f"Sample(*{self.sample})"
-
-    def __eq__(self, other):
-        return self.sample == other
-
-    def __len__(self):
-        return len(self.sample)
-
-    @property
-    def n(self):
-        return len(self)
-
-    def split_3_intervals(self, bound1, bound2):
-        if {bound1, bound2}.intersection(self.sample):
-            raise ValueError("pick another boundary")
-        # self.bound1, self.bound2 =
-
-    @property
-    def stddev(self):
-        return statistics.stdev((self.sample))
-
-    @property
-    def mean(self):
-        distribution = NormalDist.from_samples(self.sample)
-        return distribution.mean
-
-    def probability(self, boundary1, boundary2):
-        from statistics import NormalDist
-        distribution = NormalDist.from_samples(self.sample)
-        return distribution.cdf(boundary2) - distribution.cdf(boundary1)
-
-    def probability2(self, boundary1, boundary2):
-        from statistics import NormalDist
-        distribution = NormalDist.from_samples(self.sample)
-        return F((boundary2 - self.mean) / self.stddev) - F((boundary1 - self.mean) / self.stddev)
-        # return F(boundary2-distribution.mean) - distribution.cdf(boundary1-)
-
-
-def F(x):
-    """standart normal distribution"""
-    from statistics import NormalDist
-    return NormalDist().cdf(x) - 0.5
-    # *2 - 1
-
-
-class ChiSquaredTest:
-    def __init__(self, s: Sample, boundaries: set):
-        self.p1 = 1.0
-        self.p2 = 0
-        self.p3 = 0
-
-        self.s = s
-
-        if boundaries.intersection(self.s) or len(boundaries) != 2:
-            raise ValueError("pick another boundary")
-
-        self.boundary1 = min(boundaries)
-        self.boundary2 = max(boundaries)
-
-    @property
-    def first(self):
-        return [el for el in self.s if el < self.boundary1]
-
-    @property
-    def m1(self):
-        return len(self.first)
-
-    @property
-    def second(self):
-        return [el for el in self.s if self.boundary1 < el < self.boundary2]
-
-    @property
-    def m2(self):
-        return len(self.second)
-
-    @property
-    def third(self):
-        return [el for el in self.s if self.boundary2 < el]
-
-    @property
-    def m3(self):
-        return len(self.third)
-
-    @property
-    def n(self):
-        return len(self.s)
+    assert s.failure + s.success * s.failure == pytest.approx(s.probability_of_at_least_one_failure_in(2))
+    # assert 1 - s.failure + s.success * s.failure + s.success ** 2 * s.failure == pytest.approx(s.probability_no_failure_for(3))
 
 
 def test_sample():
@@ -294,15 +188,6 @@ def test_chi_squared():
     assert chi.p3 == 0
 
 
-def P(param, param1):
-    pass
-
-
-class Interval:
-    def __init__(self, *sample):
-        pass
-
-
 def test_P():
     interval = Distribution.from_small_sample(9, 10, 12)
     # assert 0, statistics.pstdev((5, 6, 7, 9, 10, 11, 12, 16))
@@ -325,32 +210,6 @@ def test_P():
     assert s.probability(8, 13) == pytest.approx(F((13 - 10) / 3.73) - F((8 - 10) / 3.73), 0.1)
     assert s.probability(8, 13) == s.probability2(8, 13)
 
-
-class ChiSquaredTestOfHomogeneity:
-    def __init__(self, girls: Sample, boys: Sample, boundaries: set):
-        self.l = len(boundaries) + 1
-        self.girls = ChiSquaredTest(girls, boundaries)
-        self.boys = ChiSquaredTest(boys, boundaries)
-
-    def __call__(self):
-        return self.girls.n * self.boys.n * (self.first + self.second + self.third)
-
-    @property
-    def first(self):
-        return self.jtol(self.girls.m1, self.boys.m1)
-
-    def jtol(self, girls_m_j, boys_m_j):
-        return (girls_m_j / self.girls.n
-                - boys_m_j / self.boys.n) ** 2 \
-               / (girls_m_j + boys_m_j)
-
-    @property
-    def second(self):
-        return self.jtol(self.girls.m2, self.boys.m2)
-
-    @property
-    def third(self):
-        return self.jtol(self.girls.m3, self.boys.m3)
 
 def test_height_dist():
     girls = s = Sample(157, 159, 167, 170, 174, 174, 176, 178)
@@ -375,3 +234,28 @@ def test_height_dist():
     assert chi.l == 3
     assert 3 / 2 == 1.5
     # Test NK Homogeneneous distribution
+
+def test_height_dist():
+    girls = s = Sample(1, 2, 2, 3, 3, 3, 4, 6, 9 )
+    boys = Sample(1, 2, 2, 2, 3, 3, 4, 4, 7, 10.)
+    assert 3.7 == pytest.approx(girls.mean, 0.1)
+    bs = {2.5, 3.5}
+    g = ChiSquaredTest(girls, bs)
+    b = ChiSquaredTest(boys, bs)
+    assert g.m1 == 3
+    assert b.m1 == 4
+    chi = ChiSquaredTestOfHomogeneity(girls, boys, bs)
+    assert pytest.approx(chi.first) == .0006349206349206357 #Fraction((Fraction(4 / 8) - Fraction(1 / 10)) ** 2, g.m1 + b.m1) * 1.
+    assert chi() == pytest.approx(0.4343, 0.1) #4.41
+
+    # assert g.m2 == 2
+    # assert b.m2 == 2
+
+    # assert g.m3 == 2
+    # assert b.m3 == 7
+    # # assert chi() % len(girls) == 0
+    # # assert chi() % len(boys) == 0
+    # assert chi.l == 3
+    # assert 3 / 2 == 1.5
+
+    # if chi ==0.446, 1 - p = .20, p = 0.8

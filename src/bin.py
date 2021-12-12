@@ -8,6 +8,9 @@ class BinomialVariable:
         if probability_of_success < 0 or probability_of_success > 1 or number_of_trials < 1:
             raise ValueError
 
+    def __repr__(self):
+        return f"Binomial(mean={self.mean}, stddev={self.stddev})"
+
     @property
     def mean(self):
         return self.number_of_trials * self.probability_of_success

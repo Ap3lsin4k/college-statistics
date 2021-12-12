@@ -2,4 +2,6 @@ pytest==6.2.5
 pytest-benchmark>=3.4.1
 
 numpy~=1.21.3
-scipy~=1.7.2
+matplotlib==3.5.0
+seaborn==0.11.12
+scipy~=1.7.2 # 39 MB
