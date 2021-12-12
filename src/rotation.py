@@ -1,5 +1,7 @@
 import math
 from fractions import Fraction as F
+from numbers import Rational, Real, Integral
+from typing import Union
 
 
 def braces(decorated):
@@ -11,8 +13,8 @@ def braces(decorated):
 
 class PiRadians:
     def __init__(self, number_of_half_circle_turns: F, error=0):
-        self.number_of_semicircle_turns = number_of_half_circle_turns
-        self.error = error
+        self.number_of_semicircle_turns = number_of_half_circle_turns.limit_denominator()
+        self.error = self.number_of_semicircle_turns - number_of_half_circle_turns
 
     @classmethod
     def pi(cls):
@@ -20,7 +22,7 @@ class PiRadians:
 
     @classmethod
     def from_float_radians(cls, radians: float):
-        num_of_turns = F.from_float(radians / math.pi).limit_denominator()
+        num_of_turns = F.from_float(radians / math.pi)
         pi_radians = cls(F(num_of_turns))
         pi_radians.error = pi_radians.number_of_semicircle_turns - radians / math.pi  # abs(pi_radians.number_of_semicircle_turns - int(pi_radians.number_of_semicircle_turns))
         return pi_radians
@@ -28,8 +30,8 @@ class PiRadians:
     def __floordiv__(self, number_of_half_circle_turns):
         return PiRadians(number_of_half_circle_turns)
 
-    def __truediv__(self, number_of_half_circle_turns):
-        return PiRadians(F(1, number_of_half_circle_turns))
+    def __truediv__(self, number_of_half_circle_turns: int):
+        return PiRadians(self.number_of_semicircle_turns/number_of_half_circle_turns)
 
     def __eq__(self, other: 'PiRadians'):
         if isinstance(other, PiRadians):
@@ -64,8 +66,31 @@ class PiRadians:
         error = f" ± {self.error}" if abs(self.error) > 10 ** 12 else ""
         return " = ".join(presentation) + error
 
-    def __sub__(self, other):
-        return self.number_of_semicircle_turns - other.number_of_semicircle_turns
+    def __sub__(self, other: 'PiRadians'):
+        return self.__add__(-other)
 
-    def __mul__(self, other):
-        return self.number_of_semicircle_turns * other
+    def __neg__(self) -> 'PiRadians':
+        return PiRadians(-self.number_of_semicircle_turns)
+
+    def __add__(self, other: 'PiRadians'):
+        return PiRadians(other.number_of_semicircle_turns+self.number_of_semicircle_turns)
+
+    def __mul__(self, other: Union[Integral, Rational]):
+        if isinstance(other, int):
+            return PiRadians(self.number_of_semicircle_turns * other)
+        raise TypeError(f"unsupported operand type(s) for *: \"{PiRadians.__name__}\" and \"{other.__class__.__name__}\"")
+
+    def __rmul__(self, other: Union[Integral, Rational]):
+        if isinstance(other, Union[Integral, Rational]):
+            return self.__mul__(other)
+        raise TypeError(f"unsupported operand type(s) for *: \"{other.__class__.__name__}\" and \"{PiRadians.__name__}\"")
+
+    @classmethod
+    def from_complex(cls, z: complex):
+        try:
+            return cls.from_float_radians(math.atan2(z.imag, z.real))
+        except ZeroDivisionError:
+            return cls(F(1, 2))
+
+
+angle = PiRadians.from_complex
