@@ -14,8 +14,8 @@ down:
 	docker-compose down --remove-orphans
 
 
-test:
-    docker run -it    -v "/home/andy/Documents/series/tests:/tests"  series/backend:tests pytest /tests
+# test:
+#     docker run -it    -v "/home/andy/Documents/series/tests:/tests"  series/backend:tests pytest /tests
 # test: up
 # 	docker-compose run --rm --no-deps --entrypoint=pytest api /tests/unit /tests/integration /tests/e2e
 
@@ -36,3 +36,6 @@ logs:
 
 black:
 	black -l 86 $$(find * -name '*.py')
+
+test-image:
+    docker build -t series/backend:tests .
