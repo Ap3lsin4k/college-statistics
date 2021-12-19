@@ -1,6 +1,6 @@
 import math
 from fractions import Fraction as F
-from numbers import Rational, Real, Integral
+from numbers import Rational, Real, Integral, Number
 from typing import Union
 
 
@@ -11,7 +11,10 @@ def braces(decorated):
     return put_braces
 
 
-class PiRadians:
+class PiRadians(Number):
+    def __hash__(self) -> int:
+        return hash(self.number_of_semicircle_turns)
+
     def __init__(self, number_of_half_circle_turns: F, error=0):
         self.number_of_semicircle_turns = number_of_half_circle_turns.limit_denominator()
         self.error = self.number_of_semicircle_turns - number_of_half_circle_turns

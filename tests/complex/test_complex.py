@@ -1,7 +1,14 @@
+import cmath
+import dataclasses
 import math
+from decimal import Decimal as D, DecimalTuple
 from fractions import Fraction as F
 from math import atan
 from numbers import Real, Integral
+from typing import Generator
+from unicodedata import decimal
+
+import sympy as sym
 
 import pytest
 
@@ -12,14 +19,14 @@ pi = PiRadians(F(1)).pi()
 
 
 def test_pi_radians_from_radians():
-    assert PiRadians.from_float_radians(math.pi) == PiRadians(F(1)) 
-    assert PiRadians.from_float_radians(2*math.pi) == PiRadians(F(2)) 
-    assert PiRadians.from_float_radians(F(3, 2)*math.pi) == PiRadians(F(3, 2)) 
-    assert PiRadians.from_float_radians(math.pi/2) == PiRadians(F(1, 2)) 
-    assert PiRadians.from_float_radians(math.pi/3) == PiRadians(F(1, 3)) 
-    assert PiRadians.from_float_radians(math.pi/6) == PiRadians(F(1, 6)) 
-    assert PiRadians.from_float_radians(math.pi/12) == PiRadians(F(1, 12)) 
-    assert PiRadians.from_float_radians(3*math.pi/4) == PiRadians(F(3, 4)) 
+    assert PiRadians.from_float_radians(math.pi) == PiRadians(F(1))
+    assert PiRadians.from_float_radians(2 * math.pi) == PiRadians(F(2))
+    assert PiRadians.from_float_radians(F(3, 2) * math.pi) == PiRadians(F(3, 2))
+    assert PiRadians.from_float_radians(math.pi / 2) == PiRadians(F(1, 2))
+    assert PiRadians.from_float_radians(math.pi / 3) == PiRadians(F(1, 3))
+    assert PiRadians.from_float_radians(math.pi / 6) == PiRadians(F(1, 6))
+    assert PiRadians.from_float_radians(math.pi / 12) == PiRadians(F(1, 12))
+    assert PiRadians.from_float_radians(3 * math.pi / 4) == PiRadians(F(3, 4))
 
 
 def test_complex():
@@ -64,10 +71,22 @@ def test_multiplication_of_complex_equals_sum_of_angles():
     assert angle(z * z2) == angle(z) + angle(z2)  # lika a logarithm
 
 
+@dataclasses.dataclass
+class PolarForm:
+    r: float
+    theta: PiRadians
+
+    @classmethod
+    def from_rectangular_form(cls, z: complex):
+        return PolarForm(abs(z), PiRadians.from_complex(z))
+
+
 def test_dir():
     assert Magnitude.from_complex(complex(0, 0)) == 0
     assert Magnitude.from_complex(complex(0, 1)) == 1
     assert Magnitude.from_complex(complex(3, 4)) == 5
+    assert PolarForm.from_rectangular_form(3 + 4j).r == 5
+    assert PolarForm.from_rectangular_form(1 + 1j).theta == pi / 4
 
 
 def test_arithmetic():
@@ -76,19 +95,21 @@ def test_arithmetic():
     assert type(a).__name__ == a.__class__.__name__ == "int"
 
     assert PiRadians(F(5, 4)) - PiRadians(F(1, 4)) == PiRadians(F(1))
-    assert PiRadians(F(1))*2 == 2*PiRadians(F(1)) == PiRadians(F(2))
+    assert PiRadians(F(1)) * 2 == 2 * PiRadians(F(1)) == PiRadians(F(2))
     assert isinstance(2, Real)
     assert isinstance(2, Integral)
     with pytest.raises(TypeError):
         PiRadians(F(1)) * PiRadians(F(1))
 
     assert PiRadians(F(2, 1)) / 3 == PiRadians(F(2, 3))
-    assert pi*2/3 == PiRadians(F(2, 3))
+    assert pi * 2 / 3 == PiRadians(F(2, 3))
 
-    assert type(pi*2) == PiRadians
-    assert PiRadians(F(4, 3)) - pi*2/3 == PiRadians(F(2, 3))
+    assert type(pi * 2) == PiRadians
+    assert PiRadians(F(4, 3)) - pi * 2 / 3 == PiRadians(F(2, 3))
     assert PiRadians(F(1, 3)) + PiRadians(F(1, 2)) == PiRadians(F(5, 6))
     assert -PiRadians(F(1)) == PiRadians(F(-1))
+
+
 class FiniteRoots():
     def __init__(self):
         self.roots = set()
@@ -111,8 +132,10 @@ class FiniteRoots():
     def __mul__(self, other):
         roots = FiniteRoots()
         for i in self.roots:
-            roots.add(i*other)
+            roots.add(i * other)
         return roots
+
+
 # class Root:
 #     def __init__(self):
 #         pass
@@ -124,3 +147,27 @@ def test_composite_root():
     assert FiniteRoots.square_root(4) == {2, -2}
     assert FiniteRoots.square_root(4) * 2 == {4, -4}
     assert FiniteRoots.square_root(4) == FiniteRoots.square_root(4)
+
+
+# def test_fundamental_theorem_of_algebra():
+#     # Roots.from_polinomial_degree(3)
+#     assert 2*sym.pi/4 == math.pi/2
+
+
+def ans(l, x=0.5) -> Generator:
+    x = l*x*(1-x)
+    yield x #(x for x in (x,))
+    yield ans(l, x)
+
+
+def test_inf():
+
+    a = D('0.1')
+    assert D('0.1')+D('.1')+D('.1') == D('.3')
+    DecimalTuple
+    assert D('3.279').as_tuple().digits == (3, 2, 7, 9)
+    # pytest.fail("here")
+        # for x in i:
+        #     print(x, "in", i)
+        # # if isinstance(i, Generator):
+        # #     print(next(i))
