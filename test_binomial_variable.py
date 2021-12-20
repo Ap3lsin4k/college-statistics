@@ -103,5 +103,6 @@ def test_sm():
     D = {key : int(distribution[key]/2) for key in sorted(distribution)} # {u'Label1': 26, u'Label2': 17, u'Label3': 30}
     plt.bar(*zip(*D.items()))
     # plt.xticks(np.arange(-20, 20, 2), np.arange(-20, 20, 2))
-    plt.savefig("sum_of_64_coin_flips_distribution.png")
+    # plt.show()
+    # plt.savefig("sum_of_64_coin_flips_distribution.png")
 
